@@ -1,105 +1,103 @@
 const express = require("express")
-const mongoose = require("mongoose")
+const { default: mongoose } = require("mongoose")
+const mongooes = require("mongoose")
 
 const PORT = 3000
 
 const app = express()
 
 app.use(express.json());
-
-//mongodb connection..
+app.use(express.urlencoded({ extended: true }));
 
 const connectDB = async () => {
-    try {
-      await mongoose.connect('mongodb://localhost:27017/mydatabase', {
-  
-        serverSelectionTimeoutMS: 30000, // 30 seconds
-        socketTimeoutMS: 45000, // 45 seconds
-      });
-      console.log('MongoDB connected');
-    } catch (err) {
-      console.error(err.message);
-      process.exit(1); // Exit process with failure
+    try{
+       await mongooes.connect("mongodb://localhost:27017/country")
+       console.log("db connected succesfully")
+    }catch (err) {
+        console.log("db not connceted")
     }
-  };
+}
 
-  connectDB()
+connectDB()
 
-  //creating schema
+//models
 
-    const schema = {
-        name:String,
-        email:String,
-        age:Number,
-        id:Number
-    }
-  
-    const model = mongoose.model("friendcollection", schema)
+// Creating schema
+// const schema = new mongoose.Schema({
+//     name: String,
+//     email: String,
+//     age: Number,
+//     id: Number
+// });
 
-    //post  req..
+// const model = mongoose.model("friendcollection", schema);
 
-    app.post("/post", async(req, res) =>{
-        console.log("post succesfully")
+const userschema = new mongoose.Schema({
+    name:String,
+    email:String,
+    phonenumber:Number
+})
 
-        const data = new model({
+const user = mongoose.model("user", userschema)
+
+//posting data  
+
+app.post("/post", async (req, res) =>{
+    
+    try{
+        const data = new user({
             name:req.body.name,
             email:req.body.email,
-            age:req.body.age,
-            id:req.body.id
+            phonenumber:req.body.Number
         })
+         await data.save();
+        res.send('succesfully posted')
+        console.log('value')
+    
+    }catch (err) {
+        console.log('ERROR IN POSTING', err)
+   
+    }
 
-        const value = await data.save()
-        res.send("succesfully completed")
-    } )
+})
 
-    // PUT Method
+//fetching
 
-    app.put("/put/:id", async(req,res) => {
+app.get('/get', async(req, res) =>{
+    try{
+        const result = await user.findOne({
+            name:req.body.name
+        })
+        console.log('processing')
+        res.json(result)
 
-       let uid = req.params.id;
-       let upname = req.body.name;
-       let umail = req.body.email;
-       let uage = req.body.uage
+    }catch (err) {
+        console.log("ERROR ON FETCHINg" , err)
+    }
+})
 
-      
-       try {
-       const updatedata = await model.findOneAndUpdate(
-        {id:uid},
-        {$set:{
-            name:upname, 
-            email:umail, 
-            age:uage,
-              id:uid}}, 
-        {new:true} 
-        )
+//deleting
 
-          if(!updatedata)
+app.put("/update", async(req, res) => {
+    try{
+        const result = await user.findByIdAndUpdate( 
+            { name: req.body.name }, // Find user by name
             {
-                res.send("No data found with the given id")
-            }else{
-                res.send(updatedata)
-            }
-          }  catch (err) {
-                console.log(err);
-                res.status(500).send("error updating data")
-
-            }
-
-       })
-
-    //GET method..
-
-    app.get("/get/:id" ,function (req, res){
-        getid =req.params.id;
-        model.find(({id:getid}),function(err, value){
-
-            res.send(value)
-
-        })
-            
+                email: req.body.email,
+                phonenumber: req.body.phonenumber,
+            },
+            { new: true, runValidators: true } // Options to return the updated document
         
-    })
+        )
+        console.log("updating")
+        res.json(result)
+    }catch (err) {
+        console.log("ERROR ON UPDATING", err)
+    }
+})
 
-  app.listen(PORT,() => {
-    console.log(`server is running on ${PORT}`)
-  })
+app.listen(PORT , () => {
+    console.log("server is running on 3000")
+}
+    
+)
