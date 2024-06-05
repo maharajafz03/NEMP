@@ -1,3 +1,5 @@
+//finally CRUD operation completed....
+
 const express = require("express")
 const { default: mongoose } = require("mongoose")
 const mongooes = require("mongoose")
@@ -76,11 +78,11 @@ app.get('/get', async(req, res) =>{
     }
 })
 
-//deleting
+//updating
 
 app.put("/update", async(req, res) => {
     try{
-        const result = await user.findByIdAndUpdate( 
+        const result = await user.findOneAndUpdate( 
             { name: req.body.name }, // Find user by name
             {
                 email: req.body.email,
@@ -93,6 +95,23 @@ app.put("/update", async(req, res) => {
         res.json(result)
     }catch (err) {
         console.log("ERROR ON UPDATING", err)
+    }
+})
+
+//deleting
+
+app.delete("/deleting", async(req, res) => {
+    try{
+        const result = await user.findOneAndDelete( 
+            { name: req.body.name }, // Find user by name
+            
+            { new: true, runValidators: true } // Options to return the updated document
+        
+        )
+        console.log("processing")
+        res.json("succefully deleted")
+    }catch (err) {
+        console.log("ERROR ON deleting", err)
     }
 })
 
